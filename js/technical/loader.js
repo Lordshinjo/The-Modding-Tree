@@ -101,14 +101,21 @@ function loadMod() {
         .catch(err => {
             console.error(err);
             setTimeout(() => {  // Run in timeout to make sure the document is ready
-                const h1 = document.createElement('h1');
-                h1.textContent = '' + err;
-                const loadingSection = document.getElementById('loadingSection');
-                loadingSection.textContent = '';
-                loadingSection.appendChild(h1);
+                document.getElementById('loadingError').innerHTML = '' + err;
+                document.getElementById('loadingSection').style = 'display: none';
+                document.getElementById('modSelector').style = null;
             }, 0);
         });
     ;
+}
+
+function selectMod(form) {
+    const user = form[0].value;
+    const repo = form[1].value;
+    const branch = form[2].value;
+    const full = form[3].checked ? '&mode=full' : '';
+    window.location = `${window.location.origin}${window.location.pathname}?user=${user}&repo=${repo}&branch=${branch}${full}`;
+    return false;
 }
 
 loadMod();

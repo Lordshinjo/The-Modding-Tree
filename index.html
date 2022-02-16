@@ -22,6 +22,23 @@
 	<div id="loadingSection" class="fullWidth">
 		<h1>Loading... (If this takes too long it means there was a serious error!)←</h1>
 	</div>
+	<div id="modSelector" style="display: none;">
+		<div id="loadingError"></div>
+		<form onsubmit="return selectMod(this)">
+			<br><br><br>
+			Select a mod to go to:
+			<br><br>
+			GitHub User: <input id="user" value="" required="required" />
+			<br>
+			GitHub Repository: <input id="repo" value="The-Modding-Tree" />
+			<br>
+			Git branch: <input id="branch" value="master" />
+			<br>
+			Fully load mod from GitHub repo? <input id="fullMode" type="checkbox" />
+			<br>
+			<button>Submit</button>
+		</form>
+	</div>
 	<div id="app" style="display: none;">
 		<canvas id="treeCanvas" class="canvas" v-if="!(tmp.gameEnded && !player.keepGoing)"></canvas>
 
