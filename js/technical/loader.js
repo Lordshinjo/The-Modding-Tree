@@ -68,17 +68,18 @@ async function loadLightMod(baseUrl) {
 }
 
 function loadMod() {
-    const params = new URLSearchParams(window.location.search);
-    const user = params.get('user');
+    return Promise.resolve()
+        .then(async () => {
+            const params = new URLSearchParams(window.location.search);
+            const user = params.get('user');
 
-    if (!user) {
-        throw new Error('Github user not specified');
-    }
+            if (!user) {
+                throw new Error('GitHub user not specified');
+            }
 
-    const repo = params.get('repo') || 'The-Modding-Tree';
-    const branch = params.get('branch') || 'master';
-    return fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`)
-        .then(async (response) => {
+            const repo = params.get('repo') || 'The-Modding-Tree';
+            const branch = params.get('branch') || 'master';
+            const response = await fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`)
             const data = await response.json()
             const commit = data['commit']['sha'];
             const baseUrl = `//cdn.jsdelivr.net/gh/${user}/${repo}@${commit}/`;
@@ -94,7 +95,16 @@ function loadMod() {
             document.getElementById('app').style = null;
             document.body.onmousemove = event => updateMouse(event);
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            setTimeout(() => {  // Run in timeout to make sure the document is ready
+                const h1 = document.createElement('h1');
+                h1.textContent = '' + err;
+                const loadingSection = document.getElementById('loadingSection');
+                loadingSection.textContent = '';
+                loadingSection.appendChild(h1);
+            }, 0);
+        });
     ;
 }
 
