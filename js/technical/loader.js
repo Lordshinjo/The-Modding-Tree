@@ -21,24 +21,34 @@ function appendAllScripts(baseUrl, paths) {
 async function loadFullMod(baseUrl) {
     const indexResponse = await fetch(`${baseUrl}index.html`);
     const indexText = await indexResponse.text();
-    const allMatches = [...indexText.matchAll(/<script\s+src="(js\/[^"]+)">/g)];
+    const html = new DOMParser().parseFromString(indexText, 'text/html');
 
     const beforeFiles = [];
     const afterFiles = [];
     let isBefore = true;
-    for (match of allMatches) {
-        if (match[1] === 'js/technical/loader.js') {
+    for (let script of html.head.getElementsByTagName('script')) {
+        const src = script.attributes.src.value;
+        if (!src.startsWith('js/')) {
+            continue;
+        }
+        if (src === 'js/technical/loader.js') {
             isBefore = false;  // And do not load that file or it will try to load wrong files
         } else if (isBefore) {
-            beforeFiles.push(match[1]);
+            beforeFiles.push(src);
         } else {
-            afterFiles.push(match[1]);
+            afterFiles.push(src);
         }
     }
 
     await appendAllScripts(baseUrl, beforeFiles);
-    await appendAllScripts(`${baseUrl}js/`, modInfo.modFiles);
+    const modFiles = modInfo['modFiles'];
+    if (modFiles) { // old mods don't have this, so just skip it
+        await appendAllScripts(`${baseUrl}js/`, modFiles);
+    }
     await appendAllScripts(baseUrl, afterFiles);
+
+    document.body.innerHTML = html.body.innerHTML;
+    load();
 }
 
 async function loadLightMod(baseUrl) {
@@ -65,6 +75,11 @@ async function loadLightMod(baseUrl) {
     await appendScript(baseUrl, 'js/mod.js');
     await appendAllScripts(`${baseUrl}js/`, modInfo.modFiles);
     await appendAllScripts('js/', afterFiles);
+
+    load();
+    document.getElementById('loadingSection').style = 'display: none';
+    document.getElementById('app').style = null;
+    document.body.onmousemove = event => updateMouse(event);
 }
 
 function loadMod() {
@@ -81,8 +96,8 @@ function loadMod() {
             const branch = params.get('branch') || 'master';
             const response = await fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`);
             const data = await response.json();
-            if (data["message"]) {
-                throw Error(data["message"]);
+            if (data['message']) {
+                throw Error(data['message']);
             }
             const commit = data['commit']['sha'];
             const baseUrl = `//cdn.jsdelivr.net/gh/${user}/${repo}@${commit}/`;
@@ -92,11 +107,6 @@ function loadMod() {
             } else {
                 await loadLightMod(baseUrl);
             }
-
-            load();
-            document.getElementById('loadingSection').style = 'display: none';
-            document.getElementById('app').style = null;
-            document.body.onmousemove = event => updateMouse(event);
         })
         .catch(err => {
             console.error(err);
