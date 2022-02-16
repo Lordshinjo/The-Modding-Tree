@@ -79,8 +79,11 @@ function loadMod() {
 
             const repo = params.get('repo') || 'The-Modding-Tree';
             const branch = params.get('branch') || 'master';
-            const response = await fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`)
-            const data = await response.json()
+            const response = await fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`);
+            const data = await response.json();
+            if (data["message"]) {
+                throw Error(data["message"]);
+            }
             const commit = data['commit']['sha'];
             const baseUrl = `//cdn.jsdelivr.net/gh/${user}/${repo}@${commit}/`;
 
