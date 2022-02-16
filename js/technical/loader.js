@@ -83,26 +83,25 @@ async function loadLightMod(baseUrl) {
 }
 
 function loadMod() {
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user');
+    const repo = params.get('repo') || 'The-Modding-Tree';
+    const branch = params.get('branch') || 'master';
+    const fullMode = params.get('mode') === 'full';
     return Promise.resolve()
         .then(async () => {
-            const params = new URLSearchParams(window.location.search);
-            const user = params.get('user');
-
             if (!user) {
                 throw new Error('GitHub user not specified');
             }
-
-            const repo = params.get('repo') || 'The-Modding-Tree';
-            const branch = params.get('branch') || 'master';
             const response = await fetch(`https://api.github.com/repos/${user}/${repo}/branches/${branch}`);
             const data = await response.json();
             if (data['message']) {
-                throw Error(data['message']);
+                throw Error(`Failed fetching GitHub branch: ${data['message']}`);
             }
             const commit = data['commit']['sha'];
             const baseUrl = `//cdn.jsdelivr.net/gh/${user}/${repo}@${commit}/`;
 
-            if (params.get('mode') === 'full') {
+            if (fullMode) {
                 await loadFullMod(baseUrl);
             } else {
                 await loadLightMod(baseUrl);
@@ -114,6 +113,10 @@ function loadMod() {
                 document.getElementById('loadingError').innerHTML = '' + err;
                 document.getElementById('loadingSection').style = 'display: none';
                 document.getElementById('modSelector').style = null;
+                document.getElementById('modUser').value = user;
+                document.getElementById('modRepo').value = repo;
+                document.getElementById('modBranch').value = branch;
+                document.getElementById('modFullMode').checked = fullMode;
             }, 0);
         });
     ;
